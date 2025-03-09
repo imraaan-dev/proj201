@@ -52,6 +52,11 @@ class ViewController: UIViewController {
   @IBOutlet weak var focus: UIImageView!
   @IBOutlet weak var toolBar: UIToolbar!
 
+  //text to speech object;
+  let speechSynthesizer = AVSpeechSynthesizer()
+  //latest label
+    var latestDetectionKeyword: String?
+
   let selection = UISelectionFeedbackGenerator()
   var detector = try! VNCoreMLModel(for: mlModel)
   var session: AVCaptureSession!
@@ -93,7 +98,25 @@ class ViewController: UIViewController {
     setUpOrientationChangeNotification()
     startVideo()
     // setModel()
+
+//    ***TAP DETECTION***
+    let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+    self.view.addGestureRecognizer(tapGestureRecognizer)
   }
+
+  @objc func handleTap(_ sender: UITapGestureRecognizer) {
+    print("tap detected")
+      if let keyword = latestDetectionKeyword {
+              print(keyword)
+              let utterance = AVSpeechUtterance(string: "Latest detection: \(keyword)")
+              utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+              speechSynthesizer.speak(utterance)
+          } else {
+              let utterance = AVSpeechUtterance(string: "No detection available")
+              utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+              speechSynthesizer.speak(utterance)
+          }
+    }
 
   override func viewWillTransition(
     to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator
@@ -165,8 +188,8 @@ class ViewController: UIViewController {
       self.labelName.text = "YOLO11l"
       mlModel = try! yolo11l(configuration: .init()).model
     case 4:
-      self.labelName.text = "YOLO11x"
-      mlModel = try! yolo11x(configuration: .init()).model
+      self.labelName.text = "YOLO11Custom"
+      mlModel = try! yolo11Custom(configuration: .init()).model
     default:
       break
     }
@@ -419,6 +442,11 @@ class ViewController: UIViewController {
     DispatchQueue.main.async {
       if let results = request.results as? [VNRecognizedObjectObservation] {
         self.show(predictions: results)
+          
+        if let bestClass = results.first?.labels.first?.identifier {
+                    self.latestDetectionKeyword = bestClass
+        }
+
       } else {
         self.show(predictions: [])
       }
