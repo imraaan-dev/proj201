@@ -99,12 +99,43 @@ class ViewController: UIViewController {
     startVideo()
     // setModel()
 
-//    ***TAP DETECTION***
+    //***TAP DETECTION***
     let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
     self.view.addGestureRecognizer(tapGestureRecognizer)
+
+    //***DOUBLE TAP DETECTION***
+    let doubleTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
+    doubleTapGestureRecognizer.numberOfTapsRequired = 2
+    self.view.addGestureRecognizer(doubleTapGestureRecognizer)
+
+    //***TRIPLE TAP DETECTION***
+    let tripleTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTripleTap(_:)))
+    tripleTapGestureRecognizer.numberOfTapsRequired = 3
+    self.view.addGestureRecognizer(tripleTapGestureRecognizer)
+
+    // Ensure single tap recognizer waits for double tap recognizer to fail
+    tapGestureRecognizer.require(toFail: doubleTapGestureRecognizer)
+    // Ensure double tap recognizer waits for triple tap recognizer to fail
+    doubleTapGestureRecognizer.require(toFail: tripleTapGestureRecognizer)
+    
+
   }
 
-  @objc func handleTap(_ sender: UITapGestureRecognizer) {
+    @objc func handleDoubleTap(_ sender: UITapGestureRecognizer) {
+        print("double tap detected")
+        let utterance = AVSpeechUtterance(string: "Double tap detected")
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        speechSynthesizer.speak(utterance)
+    }
+    
+    @objc func handleTripleTap(_ sender: UITapGestureRecognizer) {
+        print("triple tap detected")
+        let utterance = AVSpeechUtterance(string: "Triple tap detected")
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        speechSynthesizer.speak(utterance)
+    }
+    
+    @objc func handleTap(_ sender: UITapGestureRecognizer) {
     print("tap detected")
       if let keyword = latestDetectionKeyword {
               print(keyword)
@@ -117,6 +148,8 @@ class ViewController: UIViewController {
               speechSynthesizer.speak(utterance)
           }
     }
+    
+    
 
   override func viewWillTransition(
     to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator
